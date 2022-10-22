@@ -5,10 +5,8 @@ import (
 	"time"
 
 	"github.com/denkhaus/es/core"
-
-	"go.uber.org/zap"
-
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 var (
