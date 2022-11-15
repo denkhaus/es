@@ -31,13 +31,14 @@ var (
 // 	return nil
 // }
 
-func Get(ctx context.Context, endpoint, userName, password string, healthCheckInterval time.Duration) (*core.ElasticClient, error) {
+func Get(ctx context.Context, endpoint, userName, password string, healthCheckInterval time.Duration, sniff bool) (*core.ElasticClient, error) {
 	if clientInstance == nil {
 		client, err := core.NewClient(
 			endpoint,
 			userName,
 			password,
 			healthCheckInterval,
+			sniff,
 		)
 
 		if err != nil {

@@ -384,9 +384,9 @@ func buildPutMappingBody(root, key, valueType string) map[string]interface{} {
 	return body
 }
 
-func NewClient(endpoint, userName, password string, healthCheckInterval time.Duration) (*ElasticClient, error) {
+func NewClient(endpoint, userName, password string, healthCheckInterval time.Duration, sniff bool) (*ElasticClient, error) {
 	client, err := elastic.NewClient(
-		elastic.SetSniff(true),
+		elastic.SetSniff(sniff),
 		elastic.SetURL(endpoint),
 		elastic.SetHealthcheckInterval(healthCheckInterval),
 		elastic.SetBasicAuth(userName, password),
