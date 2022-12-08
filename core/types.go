@@ -8,8 +8,8 @@ import (
 
 type (
 
-	// elasticWrapper implements Client
-	ElasticClient struct {
+	// ElasticClientImpl implements Client
+	ElasticClientImpl struct {
 		client   *elastic.Client
 		endpoint string
 		userName string

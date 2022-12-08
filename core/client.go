@@ -39,7 +39,7 @@ type IndexNameAndIDProvider interface {
 //get index list from ES and parse indices from it
 //return a map where every prefix from input array is a key
 //and a value is vector of corresponding indices
-func (c *ElasticClient) GetIndices(prefixes []string) (map[string][]string, error) {
+func (c *ElasticClientImpl) GetIndices(prefixes []string) (map[string][]string, error) {
 	result := make(map[string][]string)
 
 	req, err := http.NewRequest("GET", c.endpoint+"/_cat/indices?v&s=index", nil)
@@ -80,7 +80,7 @@ func (c *ElasticClient) GetIndices(prefixes []string) (map[string][]string, erro
 	return result, nil
 }
 
-func (c *ElasticClient) Search(ctx context.Context, p *SearchParameters) (
+func (c *ElasticClientImpl) Search(ctx context.Context, p *SearchParameters) (
 	*elastic.SearchResult, error) {
 
 	searchService := c.client.Search(p.Index).
@@ -99,7 +99,7 @@ func (c *ElasticClient) Search(ctx context.Context, p *SearchParameters) (
 	return searchService.Do(ctx)
 }
 
-func (c *ElasticClient) MarshalWithNameAndIDProvider(ctx context.Context, data IndexNameAndIDProvider) error {
+func (c *ElasticClientImpl) MarshalWithNameAndIDProvider(ctx context.Context, data IndexNameAndIDProvider) error {
 	service := c.client.Index().Index(data.IndexName()).Id(data.ID())
 	if _, err := service.BodyJson(data).Do(ctx); err != nil {
 		return errors.Wrap(err, "Do [create")
@@ -108,7 +108,7 @@ func (c *ElasticClient) MarshalWithNameAndIDProvider(ctx context.Context, data I
 	return nil
 }
 
-func (c *ElasticClient) UnmarshalOne(
+func (c *ElasticClientImpl) UnmarshalOne(
 
 	ctx context.Context,
 	indexName string,
@@ -138,7 +138,7 @@ func (c *ElasticClient) UnmarshalOne(
 	return nil
 }
 
-func (c *ElasticClient) UnmarshalMostRecent(
+func (c *ElasticClientImpl) UnmarshalMostRecent(
 
 	ctx context.Context,
 	indexName string,
@@ -172,12 +172,12 @@ func (c *ElasticClient) UnmarshalMostRecent(
 	return nil
 }
 
-func (c *ElasticClient) SearchWithDSL(ctx context.Context, index, query string) (
+func (c *ElasticClientImpl) SearchWithDSL(ctx context.Context, index, query string) (
 	*elastic.SearchResult, error) {
 	return c.client.Search(index).Source(query).Do(ctx)
 }
 
-func (c *ElasticClient) ScrollService(
+func (c *ElasticClientImpl) ScrollService(
 	index string,
 	query elastic.Query,
 	sorter elastic.Sorter,
@@ -192,7 +192,7 @@ func (c *ElasticClient) ScrollService(
 	return svc
 }
 
-func (c *ElasticClient) ClearScroll(ctx context.Context, scrollID string) error {
+func (c *ElasticClientImpl) ClearScroll(ctx context.Context, scrollID string) error {
 	if scrollID == "" {
 		return nil
 	}
@@ -204,7 +204,7 @@ func (c *ElasticClient) ClearScroll(ctx context.Context, scrollID string) error 
 	return nil
 }
 
-func (c *ElasticClient) EnumerateItems(
+func (c *ElasticClientImpl) EnumerateItems(
 	ctx context.Context,
 	indexName string,
 	query elastic.Query,
@@ -260,11 +260,11 @@ func (c *ElasticClient) EnumerateItems(
 	return errs.ErrorOrNil()
 }
 
-func (c *ElasticClient) Count(ctx context.Context, index, query string) (int64, error) {
+func (c *ElasticClientImpl) Count(ctx context.Context, index, query string) (int64, error) {
 	return c.client.Count(index).BodyString(query).Do(ctx)
 }
 
-func (c *ElasticClient) FlushIndex(ctx context.Context, index string) error {
+func (c *ElasticClientImpl) FlushIndex(ctx context.Context, index string) error {
 	_, err := c.client.Flush(index).Do(ctx)
 
 	if err != nil {
@@ -274,7 +274,7 @@ func (c *ElasticClient) FlushIndex(ctx context.Context, index string) error {
 	return nil
 }
 
-func (c *ElasticClient) EnsureIndexWithMapping(ctx context.Context, indexName, mapping string) error {
+func (c *ElasticClientImpl) EnsureIndexWithMapping(ctx context.Context, indexName, mapping string) error {
 	exists, err := c.client.IndexExists(indexName).Do(ctx)
 	if err != nil {
 		return errors.Wrap(err, "IndexExists")
@@ -295,7 +295,7 @@ func (c *ElasticClient) EnsureIndexWithMapping(ctx context.Context, indexName, m
 	return nil
 }
 
-func (c *ElasticClient) DoIndex(ctx context.Context, indexName string, data map[string]interface{}) error {
+func (c *ElasticClientImpl) DoIndex(ctx context.Context, indexName string, data map[string]interface{}) error {
 	service := c.client.Index().Index(indexName)
 	for idx, dat := range data {
 		_, err := service.Id(idx).BodyJson(&dat).Do(ctx)
@@ -307,7 +307,7 @@ func (c *ElasticClient) DoIndex(ctx context.Context, indexName string, data map[
 	return nil
 }
 
-func (c *ElasticClient) DoIndexWithNameProvider(ctx context.Context, data map[string]IndexNameProvider) error {
+func (c *ElasticClientImpl) DoIndexWithNameProvider(ctx context.Context, data map[string]IndexNameProvider) error {
 	service := c.client.Index()
 	for idx, dat := range data {
 		_, err := service.Id(idx).Index(dat.IndexName()).BodyJson(&dat).Do(ctx)
@@ -319,7 +319,7 @@ func (c *ElasticClient) DoIndexWithNameProvider(ctx context.Context, data map[st
 	return nil
 }
 
-func (c *ElasticClient) DoCreate(ctx context.Context, indexName string, data map[string]interface{}) error {
+func (c *ElasticClientImpl) DoCreate(ctx context.Context, indexName string, data map[string]interface{}) error {
 	service := c.client.Index().Index(indexName).OpType("create")
 	for idx, dat := range data {
 		_, err := service.Id(idx).BodyJson(&dat).Do(ctx)
@@ -331,7 +331,7 @@ func (c *ElasticClient) DoCreate(ctx context.Context, indexName string, data map
 	return nil
 }
 
-func (c *ElasticClient) RunBulkProcessor(ctx context.Context, p *BulkProcessorParameters) (
+func (c *ElasticClientImpl) RunBulkProcessor(ctx context.Context, p *BulkProcessorParameters) (
 	*elastic.BulkProcessor, error) {
 
 	return c.client.BulkProcessor().
@@ -347,18 +347,18 @@ func (c *ElasticClient) RunBulkProcessor(ctx context.Context, p *BulkProcessorPa
 }
 
 // root is for nested object like Attr property for search attributes.
-func (c *ElasticClient) PutMapping(ctx context.Context, index, root, key, valueType string) error {
+func (c *ElasticClientImpl) PutMapping(ctx context.Context, index, root, key, valueType string) error {
 	body := buildPutMappingBody(root, key, valueType)
 	_, err := c.client.PutMapping().Index(index).BodyJson(body).Do(ctx)
 	return err
 }
 
-func (c *ElasticClient) CreateIndex(ctx context.Context, index string) error {
+func (c *ElasticClientImpl) CreateIndex(ctx context.Context, index string) error {
 	_, err := c.client.CreateIndex(index).Do(ctx)
 	return err
 }
 
-func (c *ElasticClient) Ping() *elastic.PingService {
+func (c *ElasticClientImpl) Ping() *elastic.PingService {
 	return c.client.Ping(c.endpoint)
 }
 
@@ -384,7 +384,7 @@ func buildPutMappingBody(root, key, valueType string) map[string]interface{} {
 	return body
 }
 
-func NewClient(endpoint, userName, password string, healthCheckInterval time.Duration, sniff bool) (*ElasticClient, error) {
+func NewClient(endpoint, userName, password string, healthCheckInterval time.Duration, sniff bool) (*ElasticClientImpl, error) {
 	client, err := elastic.NewClient(
 		elastic.SetSniff(sniff),
 		elastic.SetURL(endpoint),
@@ -401,7 +401,7 @@ func NewClient(endpoint, userName, password string, healthCheckInterval time.Dur
 		return nil, errors.Wrap(err, "NewClient")
 	}
 
-	return &ElasticClient{
+	return &ElasticClientImpl{
 		endpoint: endpoint,
 		userName: userName,
 		password: password,
